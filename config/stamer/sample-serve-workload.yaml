@@ -8,7 +8,7 @@ hooks:
 
 parameters:
   Name: sample-serve
-  Image: !full_registry_name "sample-serve:latest"
+  Image: !stack_output repository::LatestImage 
   Cpu: 1024
   Memory: 2048
   Port: 8080

@@ -1,17 +1,17 @@
 """
-This custom resolver will resolve public subnets in the first VPC.
+This custom resolver will resolve private subnets in the first VPC.
 """
 from sceptre.resolvers import Resolver
 
 
-class FirstVpcPublicNets(Resolver):
+class FirstVpcPrivateNets(Resolver):
     """
     Implementing class for this resolver.
     """
 
     def resolve(self):
         """
-        Find public subnets of first VPC
+        Find private subnets of first VPC
         """
         response = self.connection_manager.call(
             'ec2',
@@ -22,10 +22,10 @@ class FirstVpcPublicNets(Resolver):
             'ec2',
             'describe_subnets'
         )
-        public_networks = []
+        private_networks = []
 
         for net in response['Subnets']:
-            if net['VpcId'] == vpc and net['MapPublicIpOnLaunch']:
-                public_networks.append(net['SubnetId'])
+            if net['VpcId'] == vpc and not net['MapPublicIpOnLaunch']:
+                private_networks.append(net["SubnetId"])
 
-        return ', '.join(public_networks)
+        return ', '.join(private_networks)

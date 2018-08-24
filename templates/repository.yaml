@@ -25,3 +25,8 @@ Resources:
               - ecr:InitiateLayerUpload
               - ecr:UploadLayerPart
               - ecr:CompleteLayerUpload
+
+Outputs:
+  LatestImage:
+    Description: Name of the repository
+    Value: !Join [ "", [ !Ref "AWS::AccountId", ".dkr.ecr.", !Ref "AWS::Region", ".amazonaws.com/", !Ref Name, ":latest" ] ]

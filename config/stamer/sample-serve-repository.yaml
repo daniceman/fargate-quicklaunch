@@ -1,0 +1,5 @@
+template_path: templates/repository.yaml
+
+parameters:
+  Name: sample-serve
+

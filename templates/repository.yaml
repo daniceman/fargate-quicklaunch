@@ -1,0 +1,27 @@
+Description: >
+  Create an ECR repositry
+
+Parameters:
+  Name:
+    Type: String
+    Default: goodwin
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref Name
+      RepositoryPolicyText:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:  !Join [ ":", [ "arn", "aws", "iam", "", !Ref "AWS::AccountId", "role/Administrator" ]]
+            Action:
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
+              - ecr:PutImage
+              - ecr:InitiateLayerUpload
+              - ecr:UploadLayerPart
+              - ecr:CompleteLayerUpload

@@ -1,0 +1,140 @@
+Description: >
+  This template creates a flexible workload definition to run a container image on Fargate.
+
+Parameters:
+  Name:
+    Type: String
+    Default: goodwin
+    Default: Name of this workload
+
+  Cluster:
+    Type: String
+    Default: goodwin
+    Description: Name of the target runtime cluster
+
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group of the Fargate nodes
+
+  Certificate:
+    Type: String
+    Description: Certificate for SSL offloading on load balancer
+
+  LoadBalancer:
+    Type: String
+    Description: Runtime load balancer to use
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Target VPC
+
+  PrivateSubnetIds:
+    Type: String
+    Description: Subnets to deploy into
+
+  Image:
+    Type: String
+    Default: hello-world
+    Description: Full name of the image to run
+
+  Cpu:
+    Type: String
+    Default: 1024
+    Description: vCPU shares for this workload
+
+  Memory:
+    Type: String
+    Default: 2048
+    Description: Memory constraint in MB for this workload
+
+  Port:
+    Type: String
+    Default: 80
+    Description: Exposed container port
+
+  DesiredCount:
+    Type: String
+    Default: 3
+    Description: Desired number of instances to run
+
+  DeploymentMaximumPercent:
+    Type: String
+    Default: 300
+    Description: Maximum scale of deployment
+
+  DeploymentMinimumHealthyPercent:
+    Type: String
+    Default: 100
+    Description: Minimum healthy targets during deployment
+
+Resources:
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Join [ ":", [ "arn", "aws", "iam", "", !Ref "AWS::AccountId", "role/ecsTaskExecutionRole"]]
+      TaskRoleArn: !Join [ ":", [ "arn", "aws", "iam", "", !Ref "AWS::AccountId", "role/ecsTaskExecutionRole"]]
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: !Ref Name
+          Image: !Ref Image
+          PortMappings:
+            - ContainerPort: !Ref Port
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: !Ref Name
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      DeploymentConfiguration:
+        MaximumPercent: !Ref DeploymentMaximumPercent
+        MinimumHealthyPercent: !Ref DeploymentMinimumHealthyPercent
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: !Ref Name
+          ContainerPort: !Ref Port
+          TargetGroupArn: !Ref TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Split [ ",", !Ref PrivateSubnetIds ]
+          SecurityGroups:
+            - !Ref ClusterSecurityGroup
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Join [ "-" , [ !Ref Cluster, !Ref Name, "tg" ] ]
+      HealthCheckIntervalSeconds: "20"
+      HealthCheckPath: "/"
+      HealthCheckPort: !Ref Port
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetType: ip
+      Port: !Ref Port
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      Tags:
+      - Key: Name
+        Value: !Join [ "-" , [ !Ref Cluster, !Ref Name, "tg" ] ]
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref Certificate
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS-1-2-2017-01
+

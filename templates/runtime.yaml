@@ -1,0 +1,111 @@
+Description: >
+  Launch ECS cluster
+
+Parameters:
+  Name:
+    Type: String
+    Default: goodwin
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  PublicSubnetIds:
+    Type: String
+
+  PrivateSubnetIds:
+    Type: String
+
+  DNSName:
+    Type: String
+
+  HostedZoneName:
+    Type: String
+
+  Certificate:
+    Type: String
+
+  InboundNetwork:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR block of alllowed incoming connections
+
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref Name
+
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", [ !Ref Name, "cluster", "sg" ] ]
+      GroupDescription: !Join [ " ", [ "Fargate instances in", !Ref Name, "cluster" ]]
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          FromPort: 0
+          ToPort: 65535
+          IpProtocol: tcp
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref Name, "cluster", "sg" ] ]
+      VpcId: !Ref VpcId
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join [ "-", [ !Ref Name, "load-balancer", "sg" ] ]
+      GroupDescription: !Join [ " ", [ "ALB fronting", !Ref Name, "cluster" ]]
+      SecurityGroupIngress:
+        - CidrIp: !Ref InboundNetwork
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref Name, "load-balancer", "sg" ] ]
+      VpcId: !Ref VpcId
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Join [ "-", [ !Ref Name , "lb"] ]
+      Type: application
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Subnets: !Split [ ",", !Ref PublicSubnetIds ]
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ !Ref Name , "lb"] ]
+
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: CNAME
+      Name: !Ref DNSName
+      Comment: CNAME for ALB
+      HostedZoneName: !Ref HostedZoneName
+      ResourceRecords:
+        - !GetAtt LoadBalancer.DNSName
+      TTL: 300
+
+Outputs:
+  Cluster:
+    Description: Name of the cluster
+    Value: !Ref Cluster
+
+  LoadBalancer:
+    Value: !Ref LoadBalancer
+
+  Certificate:
+    Value: !Ref Certificate
+
+  ClusterSecurityGroup:
+    Value: !Ref ClusterSecurityGroup
+
+  VpcId:
+    Value: !Ref VpcId
+
+  PrivateSubnetIds:
+    Value: !Ref PrivateSubnetIds
+

@@ -1,0 +1,11 @@
+template_path: templates/runtime.yaml
+
+parameters:
+  Name: goodwin
+  InboundNetwork: 0.0.0.0/0
+  DNSName: goodwin.hello-world.sh
+  HostedZoneName: hello-world.sh.
+  VpcId: !first_vpc_id
+  PublicSubnetIds: !first_vpc_public_nets
+  PrivateSubnetIds: !first_vpc_private_nets
+  Certificate: # TODO add in cert id 

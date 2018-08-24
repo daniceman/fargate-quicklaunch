@@ -1,0 +1,25 @@
+template_path: templates/workload.yaml
+
+hooks:
+  before_create:
+    - !cmd "cd containers/sample-serve && ./build.sh"
+  before_update:
+    - !cmd "cd containers/sample-serve && ./build.sh"
+
+parameters:
+  Name: sample-serve
+  Image: !full_registry_name "sample-serve:latest"
+  Cpu: 1024
+  Memory: 2048
+  Port: 8080
+  DesiredCount: 3
+  DeploymentMaximumPercent: 300
+  DeploymentMinimumHealthyPercent: 100
+
+  Cluster: !stack_output runtime::Cluster
+  ClusterSecurityGroup: !stack_output runtime::ClusterSecurityGroup
+  VpcId: !first_vpc_id
+  PrivateSubnetIds: !first_vpc_private_nets
+  Certificate: !stack_output runtime::Certificate
+  LoadBalancer: !stack_output runtime::LoadBalancer
+

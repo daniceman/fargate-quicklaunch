@@ -8,4 +8,4 @@ parameters:
   VpcId: !first_vpc_id
   PublicSubnetIds: !first_vpc_public_nets
   PrivateSubnetIds: !first_vpc_private_nets
-  Certificate: # TODO add in cert id 
+  Certificate: !certificate_arn "*.hello-world.sh"

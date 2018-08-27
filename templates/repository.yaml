@@ -16,7 +16,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS:  !Join [ ":", [ "arn", "aws", "iam", "", !Ref "AWS::AccountId", "role/Administrator" ]]
+              AWS:
+                - !Join [ ":", [ "arn", "aws", "iam", "", !Ref "AWS::AccountId", "user/daniel" ]]
             Action:
               - ecr:GetDownloadUrlForLayer
               - ecr:BatchGetImage

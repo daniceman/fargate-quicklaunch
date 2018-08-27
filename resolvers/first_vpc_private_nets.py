@@ -28,4 +28,4 @@ class FirstVpcPrivateNets(Resolver):
             if net['VpcId'] == vpc and not net['MapPublicIpOnLaunch']:
                 private_networks.append(net["SubnetId"])
 
-        return ', '.join(private_networks)
+        return ','.join(private_networks)

@@ -2,17 +2,19 @@
 
 set -e
 
-image_name=sample-serve
+REGION="eu-central-1"
+
+IMAGE_NAME=sample-serve
 
 env GOOS=linux GOARCH=amd64 go build -tags netgo sample-serve.go
 
-account=$(aws sts get-caller-identity | jq -r ".Account")
-docker_host="$account.dkr.ecr.eu-west-1.amazonaws.com"
-docker build -t $docker_host/$image_name .
-docker tag $docker_host/$image_name:latest $docker_host/$image_name:latest
+ACCOUNT=$(aws sts get-caller-identity | jq -r ".Account")
+DOCKER_HOST="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
+docker build -t ${DOCKER_HOST}/${IMAGE_NAME} .
+docker tag ${DOCKER_HOST}/${IMAGE_NAME}:latest ${DOCKER_HOST}/${IMAGE_NAME}:latest
 
-$(aws ecr get-login --no-include-email --region eu-central-1)
+$(aws ecr get-login --no-include-email --region ${REGION})
 
-docker push $docker_host/$image_name:latest
+docker push ${DOCKER_HOST}/${IMAGE_NAME}:latest
 
 rm sample-serve

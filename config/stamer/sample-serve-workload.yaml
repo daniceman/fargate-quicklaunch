@@ -8,13 +8,13 @@ hooks:
 
 parameters:
   Name: sample-serve
-  Image: !stack_output repository::LatestImage 
-  Cpu: 1024
-  Memory: 2048
-  Port: 8080
-  DesiredCount: 3
-  DeploymentMaximumPercent: 300
-  DeploymentMinimumHealthyPercent: 100
+  Image: !stack_output sample-serve-repository::LatestImage 
+  Cpu: "256"
+  Memory: "512"
+  Port: "8080"
+  DesiredCount: "3"
+  DeploymentMaximumPercent: "300"
+  DeploymentMinimumHealthyPercent: "100"
 
   Cluster: !stack_output runtime::Cluster
   ClusterSecurityGroup: !stack_output runtime::ClusterSecurityGroup
